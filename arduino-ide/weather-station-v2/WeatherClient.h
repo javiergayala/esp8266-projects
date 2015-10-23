@@ -42,12 +42,22 @@ class WeatherClient {
     String apiKey;
     String myUnits = "auto";
     String myLanguage;
-    
+
     String getValue(String line);
     String getKey(String line);
-  
+    String fcio; // Forecast.io API Response
+    /*
+    A call to the folling URL:
+
+     http://api.wunderground.com/api/<APIKEY>/conditions/q/TX/San_Antonio.json
+
+    returns a JSON response that is made of 5 objects, one of them being the "currently" array that contains 17 items.  That is how we determine the proper JSON buffer size.
+    */
+    const int JSONBUFF = JSON_OBJECT_SIZE(2) + JSON_ARRAY_SIZE(59);
+    StaticJsonBuffer<JSONBUFF> jsonBuffer;
+
   public:
-    void updateWeatherData(String apiKey, double lat, double lon); 
+    void updateWeatherData(String apiKey, double lat, double lon);
     void setUnits(String units);
     int getCurrentTemp(void);
     int getCurrentHumidity(void);
@@ -61,6 +71,6 @@ class WeatherClient {
     int getMinTempTomorrow(void);
     String getIconTomorrow(void);
     String getSummaryTomorrow(void);
-    
-  
+
+
 };

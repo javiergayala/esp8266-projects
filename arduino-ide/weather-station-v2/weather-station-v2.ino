@@ -28,7 +28,7 @@ See more at http://blog.squix.ch
 #include "ssd1306_i2c.h"
 #include "icons.h"
 
-
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include "WeatherClient.h"
 
@@ -50,15 +50,15 @@ int currentFrame = 0;
 // your network SSID (name)
 char ssid[] = "<SSID>";
 // your network password
-char pass[] = "<PWD>";  
+char pass[] = "<PWD>";
 
 // Go to forecast.io and register for an API KEY
 String forecastApiKey = "<YOUR_API_KEY>";
 
 // Coordinates of the place you want
 // weather information for
-double latitude = 47.3;
-double longitude = 8.5;
+char city = "San_Antonio";
+char state = "TX";
 
 // flag changed in the ticker function every 10 minutes
 bool readyForWeatherUpdate = true;
@@ -73,7 +73,7 @@ void setup() {
 
   display.clear();
   display.display();
-  
+
   Serial.begin(115200);
   Serial.println();
   Serial.println();
@@ -82,7 +82,7 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, pass);
-  
+
   int counter = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -97,7 +97,7 @@ void setup() {
     counter++;
   }
   Serial.println("");
-  
+
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
@@ -110,7 +110,7 @@ void setup() {
 void loop() {
   if (readyForWeatherUpdate && display.getFrameState() == display.FRAME_STATE_FIX) {
     readyForWeatherUpdate = false;
-    weather.updateWeatherData(forecastApiKey, latitude, longitude);  
+    weather.updateWeatherData(forecastApiKey, latitude, longitude);
   }
   display.clear();
   display.nextFrameTick();
@@ -118,7 +118,7 @@ void loop() {
 }
 
 void setReadyForWeatherUpdate() {
-  readyForWeatherUpdate = true;  
+  readyForWeatherUpdate = true;
 }
 
 void drawFrame1(int x, int y) {
@@ -126,7 +126,7 @@ void drawFrame1(int x, int y) {
    display.drawString(65 + x, 8 + y, "Now");
    display.drawXbm(x+7,y+7, 50, 50, getIconFromString(weather.getCurrentIcon()));
    display.setFontScale2x2(true);
-   display.drawString(64+ x, 20 + y, String(weather.getCurrentTemp()) + "C"); 
+   display.drawString(64+ x, 20 + y, String(weather.getCurrentTemp()) + "C");
 }
 
 const char* getIconFromString(String icon) {
@@ -134,24 +134,24 @@ const char* getIconFromString(String icon) {
   if (icon == "clear-day") {
     return clear_day_bits;
   } else if (icon == "clear-night") {
-    return clear_night_bits;  
+    return clear_night_bits;
   } else if (icon == "rain") {
-    return rain_bits;  
+    return rain_bits;
   } else if (icon == "snow") {
-    return snow_bits;  
+    return snow_bits;
   } else if (icon == "sleet") {
-    return sleet_bits;  
+    return sleet_bits;
   } else if (icon == "wind") {
-    return wind_bits;  
+    return wind_bits;
   } else if (icon == "fog") {
-    return fog_bits;  
+    return fog_bits;
   } else if (icon == "cloudy") {
-    return cloudy_bits;  
+    return cloudy_bits;
   } else if (icon == "partly-cloudy-day") {
-    return partly_cloudy_day_bits;  
+    return partly_cloudy_day_bits;
   } else if (icon == "partly-cloudy-night") {
-    return partly_cloudy_night_bits;  
-  } 
+    return partly_cloudy_night_bits;
+  }
   return cloudy_bits;
 }
 
@@ -162,7 +162,7 @@ void drawFrame2(int x, int y) {
    display.setFontScale2x2(true);
    display.drawString(64 + x, 14 + y, String(weather.getCurrentTemp()) + "C");
    display.setFontScale2x2(false);
-   display.drawString(66 + x, 40 + y, String(weather.getMinTempToday()) + "C/" + String(weather.getMaxTempToday()) + "C");  
+   display.drawString(66 + x, 40 + y, String(weather.getMinTempToday()) + "C/" + String(weather.getMaxTempToday()) + "C");
 
 }
 
@@ -171,7 +171,7 @@ void drawFrame3(int x, int y) {
    display.setFontScale2x2(false);
    display.drawString(65 + x, 7 + y, "Tomorrow");
    display.setFontScale2x2(true);
-   display.drawString(64+ x, 20 + y, String(weather.getMaxTempTomorrow()) + "C");     
+   display.drawString(64+ x, 20 + y, String(weather.getMaxTempTomorrow()) + "C");
 }
 
 void drawSpinner(int count, int active) {
@@ -180,9 +180,8 @@ void drawSpinner(int count, int active) {
     if (active == i) {
        xbm = active_bits;
     } else {
-       xbm = inactive_bits;  
+       xbm = inactive_bits;
     }
     display.drawXbm(64 - (12 * count / 2) + 12 * i,56, 8, 8, xbm);
-  }   
+  }
 }
-

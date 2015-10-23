@@ -29,77 +29,63 @@ See more at http://blog.squix.ch
 void WeatherClient::updateWeatherData(String apiKey, double lat, double lon) {
   WiFiClient client;
   const int httpPort = 80;
-  if (!client.connect("217.26.50.8", httpPort)) {
+  if (!client.connect("api.wunderground.com", httpPort)) {
     Serial.println("connection failed");
     return;
   }
-  
+
   // We now create a URI for the request
-  String url = "/rest/weather?apiKey=" + apiKey + "&lat=" + String(lat) + "&lon=" + String(lon) + "&units=" + myUnits;
-  
+  String url = "/api/" + apiKey + "/q/" + state + "/" + city + ".json";
+
   Serial.print("Requesting URL: ");
   Serial.println(url);
-  
+
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: www.squix.org\r\n" + 
+               "Host: api.wunderground.com\r\n" +
                "Connection: close\r\n\r\n");
   while(!client.available()) {
-    
-    delay(200); 
+
+    delay(200);
   }
-  
+
   // Read all the lines of the reply from server and print them to Serial
   while(client.available()){
-    String line = client.readStringUntil('\n');
+    String fcio = client.readStringUntil('\n');
     //Serial.println(line);
-    String key = getKey(line);
-    if (key.length() > 0) {
-      String value = getValue(line);
-        if (key=="CURRENT_TEMP") {
-         currentTemp = value.toInt();
-        } else if(key =="CURRENT_HUMIDITY") {
-         currentHumidity = value.toInt();
-        } else if (key =="CURRENT_ICON") {
-         currentIcon = value;
-        } else if (key =="CURRENT_SUMMARY") {
-         currentSummary = value;
-        } else if (key =="MAX_TEMP_TODAY") {
-         maxTempToday = value.toInt();
-        } else if (key =="MIN_TEMP_TODAY") {
-         minTempToday = value.toInt();
-        } else if (key =="ICON_TODAY") {
-         iconToday = value;
-        } else if (key =="SUMMARY_TODAY") {
-         summaryToday = value;
-        } else if (key =="MAX_TEMP_TOMORROW") {
-         maxTempTomorrow = value.toInt();
-        } else if (key =="ICON_TOMORROW") {
-         iconTomorrow = value;
-        } else if (key =="MIN_TEMP_TOMORROW") {
-         minTempTomorrow = value.toInt();
-        } else if (key =="SUMMARY_TODAY") {
-         summaryTomorrow = value;
-        } 
-
+    JsonObject& fcioRoot = jsonBuffer.parseObject(fcio);
+    if (!fcioRoot.success()){
+      Serial.println("parseObject() failed for API Response");
+      return;
     }
-    
+    currentTemp = (int) fcioRoot['current_observation']['temp_f'];
+    currentHumidity = (int) fcioRoot['current_observation']['relative_humidity'];
+    currentIcon = fcioRoot['current_observation']['icon'];
+    currentSummary = fcioRoot['current_observation']['weather'];
+    maxTempToday = (int) fcioRoot['current_observation']['heat_index_f'];
+    minTempToday = (int) fcioRoot['current_observation']['dewpoint_f'];
+    iconToday = fcioRoot['current_observation']['icon'];
+    summaryToday = fcioRoot['current_observation']['weather'];
+    maxTempTomorrow = (int) fcioRoot['current_observation']['temp_f'];
+    minTempTomorrow = (int) fcioRoot['current_observation']['temp_f'];
+    summaryTomorrow = fcioRoot['current_observation']['weather'];
+
   }
-  
-  
+
+
   Serial.println();
-  Serial.println("closing connection");    
+  Serial.println("closing connection");
 }
 
 void WeatherClient::setUnits(String units) {
-   myUnits = units; 
+   myUnits = units;
 }
 
 String WeatherClient::getKey(String line) {
   int separatorPosition = line.indexOf("=");
   if (separatorPosition == -1) {
     return "";
-  }  
+  }
   return line.substring(0, separatorPosition);
 }
 
@@ -107,7 +93,7 @@ String WeatherClient::getValue(String line) {
   int separatorPosition = line.indexOf("=");
   if (separatorPosition == -1) {
     return "";
-  }  
+  }
   return line.substring(separatorPosition + 1);
 }
 
