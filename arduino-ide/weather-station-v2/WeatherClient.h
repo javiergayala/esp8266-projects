@@ -23,7 +23,11 @@ SOFTWARE.
 See more at http://blog.squix.ch
 */
 
+#ifndef WeatherClient_h
+#define WeatherClient_h
+
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 class WeatherClient {
   private:
@@ -53,11 +57,13 @@ class WeatherClient {
 
     returns a JSON response that is made of 5 objects, one of them being the "currently" array that contains 17 items.  That is how we determine the proper JSON buffer size.
     */
-    const int JSONBUFF = JSON_OBJECT_SIZE(2) + JSON_ARRAY_SIZE(59);
-    StaticJsonBuffer<JSONBUFF> jsonBuffer;
+    // JsonObject fcioRoot;
+    //const int BUFFER_SIZE = JSON_OBJECT_SIZE(2) + JSON_ARRAY_SIZE(59);
+    // StaticJsonBuffer<200> jsonBuffer;
+    // DynamicJsonBuffer jsonBuffer;
 
   public:
-    void updateWeatherData(String apiKey, double lat, double lon);
+    void updateWeatherData(String apiKey, char city[], char state[]);
     void setUnits(String units);
     int getCurrentTemp(void);
     int getCurrentHumidity(void);
@@ -74,3 +80,4 @@ class WeatherClient {
 
 
 };
+#endif

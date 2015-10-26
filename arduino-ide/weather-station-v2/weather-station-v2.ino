@@ -22,13 +22,12 @@ SOFTWARE.
 
 See more at http://blog.squix.ch
 */
-
+#include <ArduinoJson.h>
 #include <Wire.h>
 #include <Ticker.h>
 #include "ssd1306_i2c.h"
 #include "icons.h"
 
-#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include "WeatherClient.h"
 
@@ -57,8 +56,8 @@ String forecastApiKey = "<YOUR_API_KEY>";
 
 // Coordinates of the place you want
 // weather information for
-char city = "San_Antonio";
-char state = "TX";
+char city[] = "San_Antonio";
+char state[] = "TX";
 
 // flag changed in the ticker function every 10 minutes
 bool readyForWeatherUpdate = true;
@@ -110,7 +109,7 @@ void setup() {
 void loop() {
   if (readyForWeatherUpdate && display.getFrameState() == display.FRAME_STATE_FIX) {
     readyForWeatherUpdate = false;
-    weather.updateWeatherData(forecastApiKey, latitude, longitude);
+    weather.updateWeatherData(forecastApiKey, city, state);
   }
   display.clear();
   display.nextFrameTick();

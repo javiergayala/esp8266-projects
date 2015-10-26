@@ -26,7 +26,8 @@ See more at http://blog.squix.ch
 #include "WeatherClient.h"
 #include <ESP8266WiFi.h>
 
-void WeatherClient::updateWeatherData(String apiKey, double lat, double lon) {
+
+void WeatherClient::updateWeatherData(String apiKey, char city[], char state[]) {
   WiFiClient client;
   const int httpPort = 80;
   if (!client.connect("api.wunderground.com", httpPort)) {
@@ -53,22 +54,24 @@ void WeatherClient::updateWeatherData(String apiKey, double lat, double lon) {
   while(client.available()){
     String fcio = client.readStringUntil('\n');
     //Serial.println(line);
+    StaticJsonBuffer<200> jsonBuffer;
     JsonObject& fcioRoot = jsonBuffer.parseObject(fcio);
     if (!fcioRoot.success()){
       Serial.println("parseObject() failed for API Response");
       return;
     }
-    currentTemp = (int) fcioRoot['current_observation']['temp_f'];
-    currentHumidity = (int) fcioRoot['current_observation']['relative_humidity'];
-    currentIcon = fcioRoot['current_observation']['icon'];
-    currentSummary = fcioRoot['current_observation']['weather'];
-    maxTempToday = (int) fcioRoot['current_observation']['heat_index_f'];
-    minTempToday = (int) fcioRoot['current_observation']['dewpoint_f'];
-    iconToday = fcioRoot['current_observation']['icon'];
-    summaryToday = fcioRoot['current_observation']['weather'];
-    maxTempTomorrow = (int) fcioRoot['current_observation']['temp_f'];
-    minTempTomorrow = (int) fcioRoot['current_observation']['temp_f'];
-    summaryTomorrow = fcioRoot['current_observation']['weather'];
+    JsonObject& apiRoot = fcioRoot["current_observation"];
+    currentTemp = (int) apiRoot["temp_f"].as<long>();
+    currentHumidity = (int) apiRoot["relative_humidity"].as<long>();
+    const char* currentIcon = apiRoot["icon"];
+    const char* currentSummary = apiRoot["weather"];
+    maxTempToday = (int) apiRoot["heat_index_f"].as<long>();
+    minTempToday = (int) apiRoot["dewpoint_f"].as<long>();
+    const char* iconToday = apiRoot["icon"];
+    const char* summaryToday = apiRoot["weather"];
+    maxTempTomorrow = (int) apiRoot["temp_f"].as<long>();
+    minTempTomorrow = (int) apiRoot["temp_f"].as<long>();
+    const char* summaryTomorrow = apiRoot["weather"];
 
   }
 
