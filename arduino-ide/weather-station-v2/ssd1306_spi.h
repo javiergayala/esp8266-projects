@@ -31,13 +31,21 @@ Credits for parts of this code go to Mike Rankin. Thank you so much for sharing!
 #define WHITE 1
 #define INVERSE 2
 
+#define MOSI 7
+#define CLK 5
+#define CS 8
+#define DC 4
+#define RESET 0
+
 
 class SSD1306 {
 
 private:
-   int myI2cAddress;
-   int mySda;
-   int mySdc;
+   int spi_mosi = 13; // GPIO13
+   int spi_clk  = 14; // GPIO14
+   int spi_cs   = 8;  // GPIO15
+   int spi_dc   = 4;  // GPIO2
+   int spi_reset  = 0;  // GPIO16
    uint8_t buffer[128 * 64 / 8];
    bool myIsFontScaling2x2 = false;
    int myFrameState = 0;
@@ -49,40 +57,14 @@ private:
    int myColor = WHITE;
    void (**myFrameCallbacks)(int x, int y);
 
-   
+
 public:
    // Empty constructor
-   SSD1306(int i2cAddress, int sda, int sdc);
+   SSD1306(int mosi, int clk, int dc, int spi_reset, int cs);
    void init();
-   void resetDisplay(void);
-   void reconnect(void);
-   void displayOn(void);
-   void displayOff(void);
-   void clear(void);
    void display(void);
-   void setPixel(int x, int y);
-   void setChar(int x, int y, unsigned char data);
-   void drawString(int x, int y, String text);
-   void setFontScale2x2(bool isFontScaling2x2);
-   void drawBitmap(int x, int y, int width, int height, const char *bitmap);
-   void drawXbm(int x, int y, int width, int height, const char *xbm);
-   void sendCommand(unsigned char com);
-   void sendInitCommands(void);
-   void setColor(int color);
-   void drawRect(int x, int y, int width, int height);
-   void fillRect(int x, int y, int width, int height);
-   
-   void setContrast(char contrast);
-   void flipScreenVertically();
-   
-   
-   void setFrameCallbacks(int frameCount, void (*frameCallbacks[])(int x, int y));
-   void nextFrameTick(void);
-   void drawIndicators(int frameCount, int activeFrame);
-   void setFrameWaitTicks(int frameWaitTicks);
-   void setFrameTransitionTicks(int frameTransitionTicks);
-   int getFrameState();
-   
+
+
    const int FRAME_STATE_FIX = 0;
    const int FRAME_STATE_TRANSITION = 1;
 

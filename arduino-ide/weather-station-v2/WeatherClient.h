@@ -31,7 +31,7 @@ See more at http://blog.squix.ch
 
 class WeatherClient {
   private:
-    int currentTemp;
+    String currentTemp;
     int currentHumidity;
     String currentIcon;
     String currentSummary;
@@ -65,7 +65,7 @@ class WeatherClient {
   public:
     void updateWeatherData(String apiKey, char city[], char state[]);
     void setUnits(String units);
-    int getCurrentTemp(void);
+    String getCurrentTemp(void);
     int getCurrentHumidity(void);
     String getCurrentIcon(void);
     String getCurrentSummary(void);

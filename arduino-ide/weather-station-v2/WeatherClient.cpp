@@ -30,50 +30,87 @@ See more at http://blog.squix.ch
 void WeatherClient::updateWeatherData(String apiKey, char city[], char state[]) {
   WiFiClient client;
   const int httpPort = 80;
-  if (!client.connect("api.wunderground.com", httpPort)) {
+  client.setTimeout(500);
+  if(client.connect("services.faa.gov", httpPort)) {
+    Serial.println("Connected to services.faa.gov");
+  }
+  if (!client.connect("172.233.25.61", httpPort)) {
     Serial.println("connection failed");
     return;
   }
 
   // We now create a URI for the request
-  String url = "/api/" + apiKey + "/q/" + state + "/" + city + ".json";
+  String url = "/airport/status/";
+  url += city;
 
   Serial.print("Requesting URL: ");
   Serial.println(url);
 
   // This will send the request to the server
   client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: api.wunderground.com\r\n" +
+               "Host: services.faa.gov\r\n" +
+               "Content-Type: application/json\r\n" +
+               "Accept: application/json\r\n" +
                "Connection: close\r\n\r\n");
   while(!client.available()) {
-
+    Serial.println("Client not Available");
     delay(200);
   }
 
   // Read all the lines of the reply from server and print them to Serial
-  while(client.available()){
-    String fcio = client.readStringUntil('\n');
-    //Serial.println(line);
-    StaticJsonBuffer<200> jsonBuffer;
-    JsonObject& fcioRoot = jsonBuffer.parseObject(fcio);
-    if (!fcioRoot.success()){
-      Serial.println("parseObject() failed for API Response");
-      return;
-    }
-    JsonObject& apiRoot = fcioRoot["current_observation"];
-    currentTemp = (int) apiRoot["temp_f"].as<long>();
-    currentHumidity = (int) apiRoot["relative_humidity"].as<long>();
-    const char* currentIcon = apiRoot["icon"];
-    const char* currentSummary = apiRoot["weather"];
-    maxTempToday = (int) apiRoot["heat_index_f"].as<long>();
-    minTempToday = (int) apiRoot["dewpoint_f"].as<long>();
-    const char* iconToday = apiRoot["icon"];
-    const char* summaryToday = apiRoot["weather"];
-    maxTempTomorrow = (int) apiRoot["temp_f"].as<long>();
-    minTempTomorrow = (int) apiRoot["temp_f"].as<long>();
-    const char* summaryTomorrow = apiRoot["weather"];
-
+  String fcio = "";
+  while(client.available()) {
+    char c = client.read();
+    fcio += c;
   }
+  int startOfJson = fcio.indexOf('{');
+  fcio = fcio.substring(startOfJson);
+  //String fcio = client.readStringUntil('\n');
+  Serial.println("Client Available: Reading response");
+  // String fcio = client.read();
+  fcio += '\0';
+  Serial.println(fcio.length());
+  //char* fcioJSON = (char *) calloc((fcio.length() + 1), sizeof(char));
+  char fcioJSON[(fcio.length() + 1)];
+  fcio.toCharArray(fcioJSON, (fcio.length() + 1));
+  StaticJsonBuffer<550> jsonBuffer;
+  //DynamicJsonBuffer jsonBuffer;
+  JsonObject& fcioRoot = jsonBuffer.parseObject(fcioJSON);
+  if (!fcioRoot.success()){
+    Serial.println("parseObject() failed for API Response");
+    return;
+  }
+  JsonObject& apiRoot = fcioRoot["weather"];
+
+  currentTemp = apiRoot["temp"].asString();
+  int currTempCrap = currentTemp.indexOf(".");
+  currentTemp.remove(currTempCrap);
+  const char* currentHumidity = apiRoot["visibility"];
+  const char* currentIcon = apiRoot["weather"];
+  const char* currentSummary = apiRoot["weather"];
+  const char* maxTempToday = apiRoot["temp"];
+  const char* minTempToday = apiRoot["temp"];
+  const char* iconToday = apiRoot["weather"];
+  const char* summaryToday = apiRoot["weather"];
+  const char* maxTempTomorrow = apiRoot["temp"];
+  const char* minTempTomorrow = apiRoot["temp"];
+  const char* summaryTomorrow = apiRoot["weather"];
+  Serial.println(currentTemp);
+  Serial.println(currentHumidity);
+  Serial.println(currentIcon);
+  // currentTemp = (int) apiRoot["temp"];
+  // currentHumidity = (int) apiRoot["visibility"];
+  // currentTemp = (int) apiRoot["temp"];
+  // currentHumidity = (int) apiRoot["visibility"];
+  // const char* currentIcon = apiRoot["weather"];
+  // const char* currentSummary = apiRoot["weather"];
+  // maxTempToday = (int) apiRoot["temp"];
+  // minTempToday = (int) apiRoot["temp"];
+  // const char* iconToday = apiRoot["weather"];
+  // const char* summaryToday = apiRoot["weather"];
+  // maxTempTomorrow = (int) apiRoot["temp"];
+  // minTempTomorrow = (int) apiRoot["temp"];
+  // const char* summaryTomorrow = apiRoot["weather"];
 
 
   Serial.println();
@@ -101,7 +138,7 @@ String WeatherClient::getValue(String line) {
 }
 
 
-int WeatherClient::getCurrentTemp(void) {
+String WeatherClient::getCurrentTemp(void) {
   return currentTemp;
 }
 int WeatherClient::getCurrentHumidity(void) {
